@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>incident-retro: blameless post-incident review</title>
+<meta name="description" content="Turn a resolved incident into a blameless RCA: timeline, computed blast radius, a 5-Whys chain, contributing factors and prioritised remediations." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#eef1f4; --surface:#ffffff; --inset:#f5f7f9; --line:#dde2e8; --line-soft:#e7ebef;
+    --ink:#16202b; --soft:#4d5965; --mute:#8a939d;
+    --accent:#294a6b; --accent-press:#1d3850; --accent-soft:#eaf0f6;
+    --low:#3f7d54; --low-bg:#eaf3 ; --med:#9a6a1c; --high:#9d2f2f;
+    --low-bg:#e9f2ec; --med-bg:#f6efe1; --high-bg:#f6e7e7;
+    --radius:11px; --head:"Archivo",system-ui,sans-serif; --sans:"Inter",system-ui,sans-serif; --mono:"IBM Plex Mono",monospace;
+    --shadow:0 1px 2px rgba(22,32,43,.05),0 18px 36px -24px rgba(22,32,43,.32);
+    --motion:380ms cubic-bezier(.16,1,.3,1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 26px}
+  a{color:inherit}
+  .topbar{position:sticky;top:0;z-index:30;background:rgba(238,241,244,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topbar .row{max-width:1100px;margin:0 auto;padding:13px 26px;display:flex;align-items:center;gap:16px}
+  .brand{display:flex;align-items:center;gap:9px;font-family:var(--head);font-weight:800;font-size:17px;letter-spacing:-.01em}
+  .brand .dot{width:10px;height:10px;border-radius:2px;background:var(--accent)}
+  .nav{display:flex;gap:4px;margin-left:auto;align-items:center}
+  .nav a{font-family:var(--mono);font-size:12.5px;color:var(--soft);text-decoration:none;padding:7px 12px;border-radius:7px;border:1px solid transparent;cursor:pointer}
+  .nav a:hover{border-color:var(--line);color:var(--ink)}
+  .nav a.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .hamb{display:none;margin-left:auto;background:transparent;border:1px solid var(--line);border-radius:7px;padding:8px 10px;cursor:pointer}
+  .hamb span{display:block;width:18px;height:2px;background:var(--ink);margin:3px 0;border-radius:2px}
+  @media (max-width:720px){.nav{display:none;position:absolute;top:54px;right:14px;left:14px;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px}.nav.open{display:flex}.hamb{display:block}}
+
+  header.mast{padding:42px 0 22px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  h1{font-family:var(--head);font-weight:800;font-size:clamp(28px,4.6vw,46px);line-height:1.05;letter-spacing:-.02em;margin:12px 0 0;max-width:18ch}
+  .lede{font-size:16px;color:var(--soft);margin:13px 0 0;max-width:64ch}
+  .lede b{color:var(--ink);font-weight:600}
+
+  .view{padding-bottom:70px}
+  .desk{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:26px;align-items:start}
+  @media (max-width:920px){.desk{grid-template-columns:1fr}}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;position:sticky;top:74px}
+  @media (max-width:920px){.panel{position:static}}
+  label{display:block;font-size:12px;font-weight:600;margin:13px 0 5px;color:var(--soft)}
+  label:first-of-type{margin-top:0}
+  input,select,textarea{width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+  textarea{min-height:120px;resize:vertical;line-height:1.5;font-family:var(--mono);font-size:12.5px}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:2px;border-color:transparent}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .rowb{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}
+  button.btn{font-family:var(--sans);font-size:14px;font-weight:600;border-radius:8px;padding:10px 15px;cursor:pointer;border:1px solid transparent;transition:background var(--motion),border-color var(--motion)}
+  button.btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-press)}
+  .btn-ghost{background:transparent;color:var(--soft);border:1px solid var(--line)}.btn-ghost:hover{border-color:var(--accent);color:var(--ink)}
+
+  .out{min-height:360px}
+  .empty{border:1px dashed var(--line);border-radius:var(--radius);padding:32px;background:var(--surface)}
+  .empty h3{font-family:var(--head);font-weight:700;font-size:19px;margin:0 0 8px}
+  .empty p{color:var(--soft);margin:0 0 14px;max-width:56ch}
+  .note{color:var(--mute);font-size:13px}
+
+  .doc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 30px}
+  .doc .dlbl{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+  .doc h2{font-family:var(--head);font-weight:800;font-size:24px;line-height:1.15;margin:7px 0 0;letter-spacing:-.01em}
+  .docmeta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .sev{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid}
+  .sev.p1{color:var(--high);background:var(--high-bg);border-color:#e3c3c3}
+  .sev.p2{color:var(--med);background:var(--med-bg);border-color:#e7d7b6}
+  .sev.p3{color:var(--low);background:var(--low-bg);border-color:#c6e0cf}
+  .stamp{font-family:var(--mono);font-size:11.5px;color:var(--mute)}
+  h3.sec{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:24px 0 10px;border-top:1px solid var(--line-soft);padding-top:16px}
+
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media (max-width:560px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  .metric{background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:12px 13px}
+  .metric .mv{font-family:var(--head);font-weight:700;font-size:21px;color:var(--ink)}
+  .metric .mk{font-size:11.5px;color:var(--mute);margin-top:2px}
+  .metric.breach{background:var(--high-bg);border-color:#e3c3c3}
+  .metric.breach .mv{color:var(--high)}
+  .metric.okmargin{background:var(--low-bg);border-color:#c6e0cf}
+  .metric.okmargin .mv{color:var(--low)}
+  .truth{font-size:12px;color:var(--mute);margin-top:8px;font-style:italic}
+
+  .tl{list-style:none;margin:0;padding:0}
+  .tl li{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:14px}
+  .tl li:last-child{border-bottom:0}
+  .tl .tt{font-family:var(--mono);font-size:12.5px;color:var(--accent);flex:0 0 56px}
+  .tl .gap{color:var(--med);font-family:var(--mono);font-size:12px;background:var(--med-bg);border:1px dashed #e7d7b6;border-radius:6px;padding:4px 9px;margin:4px 0}
+
+  .whyrow{display:flex;gap:10px;align-items:center;margin-bottom:7px}
+  .whyrow .wn{font-family:var(--mono);font-size:11px;color:var(--accent);flex:0 0 58px}
+  .factors{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:560px){.factors{grid-template-columns:1fr}}
+  .fbucket .fh{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin-bottom:5px}
+  .fbucket textarea{min-height:64px}
+
+  .rem{border:1px solid var(--line);border-radius:9px;padding:12px 13px;margin-bottom:10px;background:var(--inset)}
+  .rem .ra{display:flex;gap:8px;align-items:center}
+  .rem .ra input{flex:1}
+  .rem .rsel{display:flex;gap:8px;margin-top:9px;align-items:center;flex-wrap:wrap}
+  .rem .rsel select{width:auto;font-family:var(--mono);font-size:12px;padding:6px 8px}
+  .prio{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.04em;padding:4px 10px;border-radius:999px;border:1px solid;margin-left:auto}
+  .prio.quickwin{color:var(--low);background:var(--low-bg);border-color:#c6e0cf}
+  .prio.major{color:var(--accent);background:var(--accent-soft);border-color:#cad9e7}
+  .prio.planned{color:var(--med);background:var(--med-bg);border-color:#e7d7b6}
+  .prio.fillin{color:var(--soft);background:var(--inset);border-color:var(--line)}
+  .prio.reconsider{color:var(--high);background:var(--high-bg);border-color:#e3c3c3}
+
+  #execsum{min-height:90px;font-family:var(--sans);font-size:14.5px}
+  .receipt{font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-top:10px;border-top:1px solid var(--line-soft);padding-top:8px;line-height:1.5}
+  .docbar{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+
+  .libitem{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 17px;margin-bottom:11px}
+  .libitem .lt{font-family:var(--head);font-weight:700;font-size:16px}
+  .libitem .lm{font-family:var(--mono);font-size:11.5px;color:var(--mute);margin-top:3px}
+  .libitem .lb{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+  .ref h2{font-family:var(--head);font-weight:700;font-size:18px;margin:24px 0 9px}
+  .ref p{color:var(--soft);max-width:66ch}
+  .ref b{color:var(--ink)}
+
+  .enter{opacity:0;transform:translateY(7px);animation:rise var(--motion) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.enter{animation:none;opacity:1;transform:none}button{transition:none}}
+  @media print{ .topbar,.mast,.panel,footer,.docbar{display:none!important} .desk{grid-template-columns:1fr} .doc{border:0;box-shadow:none;padding:0} body{background:#fff} }
+  footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--mute);font-size:12.5px;display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono)}
+  footer a{color:var(--soft);text-decoration:none;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="row">
+    <div class="brand"><span class="dot"></span> incident-retro</div>
+    <button class="hamb" id="hamb" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav class="nav" id="nav">
+      <a data-view="build" class="active">Build RCA</a>
+      <a data-view="library">Library</a>
+      <a data-view="reference">Reference</a>
+    </nav>
+  </div>
+</div>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">incident-retro · post-incident review</div>
+    <h1>Turn a resolved incident into a blameless RCA.</h1>
+    <p class="lede">The reflection step of the support loop. Give it what happened and the numbers, and it builds the review a senior engineer or business analyst is expected to produce: a timeline, a <b>computed</b> blast radius, a 5-Whys chain, contributing factors, and three prioritised actions. The app owns every number; the wording is yours or an optional draft you review.</p>
+  </header>
+  <main id="main"></main>
+  <footer>
+    <span style="color:var(--accent)">Deterministic core · AI only at the edges · stays in your browser</span>
+    <span>Built by Kabelo Theko</span>
+    <a href="https://github.com/Kabelo-Theko/incident-retro" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+  </footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const main=$("#main");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const LIBKEY="ir_rcas";
+const lsList=()=>{try{return JSON.parse(localStorage.getItem(LIBKEY)||"[]");}catch(e){return [];}};
+const lsAdd=a=>{const all=lsList();all.unshift(a);localStorage.setItem(LIBKEY,JSON.stringify(all.slice(0,40)));};
+const lsDel=id=>localStorage.setItem(LIBKEY,JSON.stringify(lsList().filter(x=>x.id!==id)));
+
+const state={view:"build",rca:null,libCache:[]};
+
+/* ---------- deterministic engine ---------- */
+function parseTimeline(text){
+  const events=[]; (text||"").split(/\n/).forEach(line=>{
+    const m=line.match(/^\s*(\d{1,2})[:hH](\d{2})\b\s*(.*)$/);
+    if(m){ const min=(+m[1])*60+(+m[2]); events.push({min,t:`${String(m[1]).padStart(2,"0")}:${m[2]}`,label:m[3].trim()||"(no detail)"}); }
+  });
+  events.sort((a,b)=>a.min-b.min);
+  const rows=[]; for(let i=0;i<events.length;i++){ rows.push({type:"ev",...events[i]});
+    if(i<events.length-1){ const gap=events[i+1].min-events[i].min; if(gap>=15) rows.push({type:"gap",label:`${gap} minute gap with no recorded action`}); } }
+  return rows;
+}
+function blast(users,downtime,sla){
+  users=+users||0; downtime=+downtime||0; sla=+sla||0;
+  const userMin=users*downtime;
+  let slaState=null;
+  if(sla>0){ slaState = downtime>sla ? {breached:true,by:downtime-sla} : {breached:false,margin:sla-downtime}; }
+  return {users,downtime,userMin,sla,slaState};
+}
+const E={S:1,M:2,L:3}, I={Low:1,Medium:2,High:3};
+function priority(effort,impact){
+  const e=E[effort]||2, i=I[impact]||2;
+  if(i>=3&&e<=2) return {cls:"quickwin",label:"Quick win"};
+  if(i>=3&&e===3) return {cls:"major",label:"Major project"};
+  if(i===2) return {cls:"planned",label:"Planned"};
+  if(i<=1&&e<=1) return {cls:"fillin",label:"Fill-in"};
+  return {cls:"reconsider",label:"Reconsider"};
+}
+const rank=r=>(I[r.impact]||2)*10-(E[r.effort]||2);
+function factsString(b){
+  const parts=[`Users affected: ${b.users}`,`Downtime: ${b.downtime} min`,`User-minutes lost: ${b.userMin}`];
+  if(b.slaState){ parts.push(b.slaState.breached?`SLA target ${b.sla} min, breached by ${b.slaState.by} min`:`SLA target ${b.sla} min, met with ${b.slaState.margin} min to spare`); }
+  return parts.join("; ");
+}
+function templateExec(rca,b){
+  const sla=b.slaState? (b.slaState.breached?` The ${b.sla} minute SLA was breached by ${b.slaState.by} minutes.`:` The ${b.sla} minute SLA was met, with ${b.slaState.margin} minutes to spare.`):"";
+  return `${rca.title||"This incident"} (${rca.severity}) affected ${b.users} users for ${b.downtime} minutes, a loss of ${b.userMin} user-minutes.${sla} The contributing factors and three prioritised actions below are intended to stop a repeat. This is a blameless review: it looks at systems and process, not individuals.`;
+}
+
+/* ---------- example ---------- */
+const SAMPLE={title:"Sandton POS offline at open",severity:"P1",users:6,downtime:48,sla:30,
+  description:"08:05 First till at Sandton would not take card payments\n08:12 Store manager called the service desk\n08:20 Confirmed all six tills affected, cash only\n08:41 Found the store switch uplink had dropped after an overnight power dip\n08:53 Reseated the uplink, tills back online\n08:58 Confirmed card payments working on all tills",
+  whys:["Card payments failed on all tills at open","The tills could not reach the payment gateway","The store network had no route out","The switch uplink had dropped","An overnight power dip reset the switch and the uplink did not renegotiate"],
+  factors:{technical:"Switch uplink did not auto-recover after the power dip",process:"No morning pre-open network check at the store",human:"",external:"Overnight power dip on the grid"},
+  remediations:[{action:"Add a 5 minute pre-open network check to the store opening routine",effort:"S",impact:"High"},{action:"Put the store switch on a small UPS so a brief dip does not reset it",effort:"M",impact:"High"},{action:"Alert the service desk automatically when a store gateway goes unreachable",effort:"L",impact:"Medium"}],
+  exec:"",_meta:{model:"DeepSeek v4 Flash",task:"illustrative example",ts:"2026-06-22T09:10:00.000Z"}};
+
+/* ---------- nav ---------- */
+function setView(v){state.view=v;document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("active",a.dataset.view===v));$("#nav").classList.remove("open");render();}
+$("#hamb").addEventListener("click",()=>$("#nav").classList.toggle("open"));
+document.querySelectorAll(".nav a").forEach(a=>a.addEventListener("click",()=>setView(a.dataset.view)));
+
+/* ---------- build view ---------- */
+function buildView(){
+  main.innerHTML=`<div class="view enter"><div class="desk">
+    <section class="panel">
+      <label for="title">Incident title</label>
+      <input id="title" placeholder="Short, specific" value="${esc(state.draft?.title||"")}" />
+      <div class="grid2">
+        <div><label for="sev">Severity</label><select id="sev"><option ${sevSel("P1")}>P1</option><option ${sevSel("P2")}>P2</option><option ${sevSel("P3")}>P3</option></select></div>
+        <div><label for="users">Users affected</label><input id="users" type="number" min="0" value="${esc(state.draft?.users??"")}" /></div>
+      </div>
+      <div class="grid2">
+        <div><label for="downtime">Downtime (min)</label><input id="downtime" type="number" min="0" value="${esc(state.draft?.downtime??"")}" /></div>
+        <div><label for="sla">SLA target (min)</label><input id="sla" type="number" min="0" value="${esc(state.draft?.sla??"")}" /></div>
+      </div>
+      <label for="desc">What happened (paste the incident; lines that start with a time become the timeline)</label>
+      <textarea id="desc" placeholder="08:05 first till would not take cards&#10;08:12 store manager called the desk&#10;08:41 found the switch uplink had dropped&#10;08:53 reseated it, tills back online">${esc(state.draft?.description||"")}</textarea>
+      <label for="aimodel">AI model (optional draft)</label>
+      <select id="aimodel"><option value="flash">DeepSeek v4 Flash (fast)</option><option value="pro">DeepSeek v4 Pro (best reasoning)</option><option value="minimax">MiniMax M3</option></select>
+      <div class="rowb"><button class="btn btn-primary" id="build">Build RCA</button><button class="btn btn-ghost" id="ai">Draft with AI</button><button class="btn btn-ghost" id="ex">See an example</button></div>
+    </section>
+    <section class="out" id="out">${state.rca?docHTML(state.rca):emptyBuild()}</section>
+  </div></div>`;
+  if(state.rca) wireDoc();
+  $("#build").addEventListener("click",()=>{captureDraft();doBuild();});
+  $("#ai").addEventListener("click",()=>{captureDraft();doAI();});
+  $("#ex").addEventListener("click",()=>{state.rca=JSON.parse(JSON.stringify(SAMPLE));computeInto(state.rca);$("#out").innerHTML=docHTML(state.rca);wireDoc();});
+}
+const sevSel=v=>(state.draft?.severity||"P2")===v?"selected":"";
+function emptyBuild(){return `<div class="empty enter"><h3>The review appears here.</h3><p>Fill in the incident on the left and press Build RCA for the deterministic skeleton: timeline, blast radius and prioritised actions. Draft with AI fills the reasoning, which you then review.</p><p class="note">No key set? Build RCA and the example both work without one.</p></div>`;}
+function captureDraft(){ state.draft={title:$("#title").value,severity:$("#sev").value,users:$("#users").value,downtime:$("#downtime").value,sla:$("#sla").value,description:$("#desc").value}; }
+
+function computeInto(rca){
+  rca.timeline=parseTimeline(rca.description);
+  rca.blastData=blast(rca.users,rca.downtime,rca.sla);
+  if(!rca.exec) rca.exec=templateExec(rca,rca.blastData);
+}
+function doBuild(){
+  const d=state.draft;
+  state.rca={title:d.title,severity:d.severity,users:d.users,downtime:d.downtime,sla:d.sla,description:d.description,
+    whys:["","","","",""],factors:{technical:"",process:"",human:"",external:""},
+    remediations:[{action:"",effort:"M",impact:"Medium"},{action:"",effort:"M",impact:"Medium"},{action:"",effort:"M",impact:"Medium"}],exec:"",_meta:null};
+  computeInto(state.rca);
+  $("#out").innerHTML=docHTML(state.rca); wireDoc();
+}
+async function doAI(){
+  const d=state.draft; const out=$("#out");
+  if(!(d.description||"").trim()){ out.innerHTML=`<div class="empty"><h3>Add the incident first.</h3><p>Paste what happened on the left, then Draft with AI.</p></div>`; return; }
+  // deterministic numbers first, always
+  const base={title:d.title,severity:d.severity,users:d.users,downtime:d.downtime,sla:d.sla,description:d.description,
+    whys:["","","","",""],factors:{technical:"",process:"",human:"",external:""},
+    remediations:[{action:"",effort:"M",impact:"Medium"},{action:"",effort:"M",impact:"Medium"},{action:"",effort:"M",impact:"Medium"}],exec:"",_meta:null};
+  computeInto(base);
+  out.innerHTML=`<div class="empty"><h3>Drafting the reasoning…</h3><p class="note">Building the 5-Whys, contributing factors and remediations from the incident.</p></div>`;
+  const label=($("#aimodel")&&$("#aimodel").options[$("#aimodel").selectedIndex].text.replace(/\s*\(.*\)\s*/,"").trim())||"AI";
+  try{
+    const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({incident:d.description.slice(0,3500),facts:factsString(base.blastData),model:($("#aimodel")?.value||"flash")})});
+    if(!r.ok) throw 0; const j=await r.json();
+    base.whys=(j.whys&&j.whys.length?j.whys:base.whys).concat(["","","","",""]).slice(0,5);
+    base.factors={technical:(j.factors?.technical||[]).join("\n"),process:(j.factors?.process||[]).join("\n"),human:(j.factors?.human||[]).join("\n"),external:(j.factors?.external||[]).join("\n")};
+    if(Array.isArray(j.remediations)&&j.remediations.length){ base.remediations=j.remediations.slice(0,3).map(x=>({action:x.action||"",effort:["S","M","L"].includes(x.effort)?x.effort:"M",impact:["Low","Medium","High"].includes(x.impact)?x.impact:"Medium"})); while(base.remediations.length<3) base.remediations.push({action:"",effort:"M",impact:"Medium"}); }
+    if(j.exec_summary) base.exec=j.exec_summary;
+    base._meta={model:label,task:"rca",ts:new Date().toISOString()};
+    state.rca=base; out.innerHTML=docHTML(base); wireDoc();
+  }catch(e){
+    state.rca=base; out.innerHTML=docHTML(base); wireDoc();
+    const w=$("#aiwarn"); if(w) w.textContent="AI draft needs NVIDIA_API_KEY on the deploy. The deterministic skeleton above is ready to fill in by hand.";
+  }
+}
+
+/* ---------- document render ---------- */
+function metricsHTML(b){
+  let sla="";
+  if(b.slaState){ sla = b.slaState.breached
+    ? `<div class="metric breach"><div class="mv">+${b.slaState.by}</div><div class="mk">min over SLA (${b.sla})</div></div>`
+    : `<div class="metric okmargin"><div class="mv">${b.slaState.margin}</div><div class="mk">min under SLA (${b.sla})</div></div>`; }
+  else { sla=`<div class="metric"><div class="mv">n/a</div><div class="mk">no SLA target set</div></div>`; }
+  return `<div class="metrics">
+    <div class="metric"><div class="mv">${b.users}</div><div class="mk">users affected</div></div>
+    <div class="metric"><div class="mv">${b.downtime}</div><div class="mk">minutes down</div></div>
+    <div class="metric"><div class="mv">${b.userMin}</div><div class="mk">user-minutes lost</div></div>
+    ${sla}
+  </div><p class="truth">Computed from your inputs, not generated. Change the numbers on the left and rebuild to update.</p>`;
+}
+function timelineHTML(rows){
+  if(!rows.length) return `<p class="note">No timestamped lines found. Add lines like "08:05 first till offline" to build a timeline.</p>`;
+  return `<ul class="tl">${rows.map(r=>r.type==="gap"?`<li><span class="tt"></span><span class="gap">${esc(r.label)}</span></li>`:`<li><span class="tt">${esc(r.t)}</span><span>${esc(r.label)}</span></li>`).join("")}</ul>`;
+}
+function docHTML(rca){
+  const b=rca.blastData;
+  const sev=(rca.severity||"P2").toLowerCase();
+  const whys=rca.whys.map((w,i)=>`<div class="whyrow"><span class="wn">Why ${i+1}</span><input class="why" data-i="${i}" value="${esc(w)}" placeholder="${i===0?"Why did the incident happen?":"Why was that the case?"}" /></div>`).join("");
+  const buckets=[["technical","Technical"],["process","Process"],["human","Human / training"],["external","External"]];
+  const factors=buckets.map(([k,lbl])=>`<div class="fbucket"><div class="fh">${lbl}</div><textarea class="factor" data-b="${k}" placeholder="One per line">${esc(rca.factors[k]||"")}</textarea></div>`).join("");
+  const rems=rca.remediations.map((r,i)=>{const p=priority(r.effort,r.impact);return `<div class="rem" data-i="${i}"><div class="ra"><input class="raction" data-i="${i}" value="${esc(r.action)}" placeholder="Remediation action ${i+1}" /></div><div class="rsel">Effort <select class="reffort" data-i="${i}">${["S","M","L"].map(o=>`<option ${r.effort===o?"selected":""}>${o}</option>`).join("")}</select> Impact <select class="rimpact" data-i="${i}">${["Low","Medium","High"].map(o=>`<option ${r.impact===o?"selected":""}>${o}</option>`).join("")}</select><span class="prio ${p.cls}" data-i="${i}">${p.label}</span></div></div>`;}).join("");
+  return `<div class="doc enter">
+    <div class="dlbl">Post-incident review</div>
+    <h2>${esc(rca.title||"Untitled incident")}</h2>
+    <div class="docmeta"><span class="sev ${sev}">${esc(rca.severity||"P2")}</span><span class="stamp">Generated ${new Date().toLocaleString("en-GB")}</span></div>
+    <h3 class="sec">Blast radius</h3>
+    ${metricsHTML(b)}
+    <h3 class="sec">Timeline</h3>
+    ${timelineHTML(rca.timeline)}
+    <h3 class="sec">5-Whys</h3>
+    ${whys}
+    <h3 class="sec">Contributing factors</h3>
+    <div class="factors">${factors}</div>
+    <h3 class="sec">Remediations (effort vs impact)</h3>
+    ${rems}
+    <h3 class="sec">Executive summary</h3>
+    <textarea id="execsum" placeholder="Plain-English summary for a non-technical reader">${esc(rca.exec||"")}</textarea>
+    ${rca._meta?`<div class="receipt">Reasoning receipt: model ${esc(rca._meta.model)} · task ${esc(rca._meta.task)}${rca._meta.ts?` · ${new Date(rca._meta.ts).toLocaleString("en-GB")}`:""}. AI drafted the wording; the numbers above are computed by the app. Review before circulating.</div>`:``}
+    <p class="note" id="aiwarn" style="margin-top:10px"></p>
+    <div class="docbar">
+      <button class="btn btn-primary" id="copymd">Copy Markdown</button>
+      <button class="btn btn-ghost" id="dlmd">Download .md</button>
+      <button class="btn btn-ghost" id="savelib">Save to library</button>
+      <button class="btn btn-ghost" id="printrca">Print</button>
+    </div>
+  </div>`;
+}
+function wireDoc(){
+  document.querySelectorAll(".why").forEach(el=>el.addEventListener("input",()=>{state.rca.whys[+el.dataset.i]=el.value;}));
+  document.querySelectorAll(".factor").forEach(el=>el.addEventListener("input",()=>{state.rca.factors[el.dataset.b]=el.value;}));
+  document.querySelectorAll(".raction").forEach(el=>el.addEventListener("input",()=>{state.rca.remediations[+el.dataset.i].action=el.value;}));
+  const repr=i=>{const r=state.rca.remediations[i];const p=priority(r.effort,r.impact);const chip=document.querySelector(`.prio[data-i="${i}"]`);if(chip){chip.className="prio "+p.cls;chip.textContent=p.label;}};
+  document.querySelectorAll(".reffort").forEach(el=>el.addEventListener("change",()=>{state.rca.remediations[+el.dataset.i].effort=el.value;repr(+el.dataset.i);}));
+  document.querySelectorAll(".rimpact").forEach(el=>el.addEventListener("change",()=>{state.rca.remediations[+el.dataset.i].impact=el.value;repr(+el.dataset.i);}));
+  const ex=$("#execsum"); if(ex) ex.addEventListener("input",()=>{state.rca.exec=ex.value;});
+  const cp=$("#copymd"); if(cp) cp.addEventListener("click",async()=>{await navigator.clipboard.writeText(markdown(state.rca));cp.textContent="Copied";setTimeout(()=>cp.textContent="Copy Markdown",1400);});
+  const dl=$("#dlmd"); if(dl) dl.addEventListener("click",()=>{const blob=new Blob([markdown(state.rca)],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(state.rca.title||"rca").toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,50)+"-rca.md";a.click();URL.revokeObjectURL(a.href);});
+  const pr=$("#printrca"); if(pr) pr.addEventListener("click",()=>window.print());
+  const sv=$("#savelib"); if(sv) sv.addEventListener("click",()=>{const rec={...state.rca,id:"IR-"+Date.now(),created_at:new Date().toISOString()};lsAdd(rec);sv.textContent="Saved to library";setTimeout(()=>sv.textContent="Save to library",1400);});
+}
+function markdown(rca){
+  const b=rca.blastData||blast(rca.users,rca.downtime,rca.sla);
+  const L=[];
+  L.push(`# Post-incident review: ${rca.title||"Untitled"}`);
+  L.push(`\n**Severity:** ${rca.severity}  |  **Generated:** ${new Date().toLocaleString("en-GB")}`);
+  L.push(`\n## Blast radius (computed)`);
+  L.push(`- Users affected: ${b.users}`);
+  L.push(`- Downtime: ${b.downtime} min`);
+  L.push(`- User-minutes lost: ${b.userMin}`);
+  if(b.slaState) L.push(`- SLA: target ${b.sla} min, ${b.slaState.breached?`breached by ${b.slaState.by} min`:`met with ${b.slaState.margin} min to spare`}`);
+  if(rca.timeline&&rca.timeline.length){ L.push(`\n## Timeline`); rca.timeline.forEach(r=>L.push(r.type==="gap"?`- (${r.label})`:`- ${r.t} ${r.label}`)); }
+  const whys=rca.whys.filter(w=>w&&w.trim()); if(whys.length){ L.push(`\n## 5-Whys`); whys.forEach((w,i)=>L.push(`${i+1}. ${w}`)); }
+  const fb=[["technical","Technical"],["process","Process"],["human","Human / training"],["external","External"]].filter(([k])=>(rca.factors[k]||"").trim());
+  if(fb.length){ L.push(`\n## Contributing factors`); fb.forEach(([k,lbl])=>{L.push(`\n**${lbl}**`);(rca.factors[k]||"").split(/\n/).filter(x=>x.trim()).forEach(x=>L.push(`- ${x.trim()}`));}); }
+  const rems=rca.remediations.filter(r=>r.action&&r.action.trim());
+  if(rems.length){ L.push(`\n## Remediations`); rems.slice().sort((a,c)=>rank(c)-rank(a)).forEach(r=>{const p=priority(r.effort,r.impact);L.push(`- [${p.label}] ${r.action} (effort ${r.effort}, impact ${r.impact})`);}); }
+  if((rca.exec||"").trim()){ L.push(`\n## Executive summary`); L.push(rca.exec.trim()); }
+  return L.join("\n")+"\n";
+}
+
+/* ---------- library + reference ---------- */
+function libraryView(){
+  const items=lsList(); state.libCache=items;
+  if(!items.length){ main.innerHTML=`<div class="view enter"><div class="empty"><h3>No saved reviews yet.</h3><p>Build an RCA and press Save to library. Reviews are stored in this browser.</p></div></div>`; return; }
+  const find=id=>state.libCache.find(x=>x.id===id);
+  main.innerHTML=`<div class="view enter">`+items.map(a=>`<div class="libitem" data-id="${esc(a.id)}"><div class="lt">${esc(a.title||"Untitled")} <span class="sev ${(a.severity||"p2").toLowerCase()}" style="margin-left:6px">${esc(a.severity||"P2")}</span></div><div class="lm">${a.users||0} users · ${a.downtime||0} min · saved ${new Date(a.created_at||Date.now()).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</div><div class="lb"><button class="btn btn-ghost open" data-id="${esc(a.id)}">Open</button><button class="btn btn-ghost copy" data-id="${esc(a.id)}">Copy Markdown</button><button class="btn btn-ghost del" data-id="${esc(a.id)}">Delete</button></div></div>`).join("")+`</div>`;
+  main.querySelectorAll(".open").forEach(b=>b.addEventListener("click",()=>{const a=find(b.dataset.id);state.rca=JSON.parse(JSON.stringify(a));computeInto(state.rca);state.draft={title:a.title,severity:a.severity,users:a.users,downtime:a.downtime,sla:a.sla,description:a.description};setView("build");}));
+  main.querySelectorAll(".copy").forEach(b=>b.addEventListener("click",async()=>{await navigator.clipboard.writeText(markdown(find(b.dataset.id)));b.textContent="Copied";setTimeout(()=>b.textContent="Copy Markdown",1400);}));
+  main.querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>{lsDel(b.dataset.id);render();}));
+}
+function referenceView(){
+  main.innerHTML=`<div class="view ref enter">
+    <h2>What this produces</h2>
+    <p>A blameless post-incident review: a <b>timeline</b> rebuilt from your notes, a <b>computed blast radius</b>, a <b>5-Whys</b> chain, contributing factors split into technical, process, human and external, and three <b>remediations</b> scored by effort against impact. It is the artefact a senior support engineer runs after a major incident, and the same shape a business analyst produces on an impact-analysis ticket.</p>
+    <h2>The numbers are computed, not generated</h2>
+    <p>Blast radius and SLA status come straight from the figures you enter: users affected times downtime gives user-minutes lost, and downtime against the SLA target gives the breach or the margin. The AI never touches a number. That is the line that lets you defend the output: every figure traces back to an input.</p>
+    <h2>How the AI is used</h2>
+    <p>The model is optional and only drafts wording: the 5-Whys, the factor lists and the executive summary, fed the incident text and the computed facts so it cannot invent figures. Every draft carries a reasoning receipt and is yours to edit before it goes anywhere. With no key set, Build RCA and the example still work.</p>
+    <h2>Effort vs impact</h2>
+    <p>Each remediation is tagged: high impact with low effort is a <b>Quick win</b>, high impact with high effort is a <b>Major project</b>, low impact with low effort is a <b>Fill-in</b>. The Markdown export orders them so the quick wins sit at the top.</p>
+    <h2>Where it fits</h2>
+    <p>It is the reflection step after a ticket is closed in ticket-triage and written up in resolve-notes. Where resolve-notes captures the fix, incident-retro captures why it happened and what to change so it does not happen again.</p>
+  </div>`;
+}
+
+function render(){ if(state.view==="build")buildView(); else if(state.view==="library")libraryView(); else referenceView(); }
+(function initFromURL(){try{const p=new URLSearchParams(location.search);const t=p.get("title"),u=p.get("users"),d=p.get("downtime"),s=p.get("sla"),desc=p.get("incident")||p.get("symptom");if(t||u||d||s||desc){state.draft={title:t||"",severity:p.get("severity")||"P2",users:u||"",downtime:d||"",sla:s||"",description:desc||""};}const v=p.get("view");if(v&&["build","library","reference"].includes(v))state.view=v;}catch(e){}})();
+document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("active",a.dataset.view===state.view));
+render();
+</script>
+</body>
+</html>
