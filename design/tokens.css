@@ -1,0 +1,71 @@
+/* ════════════════════════════════════════════════════════════════════
+   INCIDENT-RETRO v2 · "THE DEBRIEF" DESIGN SYSTEM — TOKENS
+   Project: incident-retro · github.com/Kabelo-Theko/incident-retro
+   Persona: the calm hour after the fire — blush clay, oxblood ink,
+   Instrument Serif. Blameless by design: the app owns every number.
+   Themes on html[data-theme]: clay (default) · late-hour (plum dark).
+   Type: Instrument Serif (display) · Switzer (text, Fontshare) ·
+   Space Mono (times, receipts, chips). Measured pairs: accessibility.md.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   INCIDENT-RETRO v2 · "THE DEBRIEF" — the calm hour after the fire.
+   Blush clay, oxblood ink, elegant Instrument Serif. Blameless by
+   design: the app owns every number; people own the learning.
+   Themes: clay (default) · late-hour (plum dark)
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  --head:"Instrument Serif",Georgia,serif;
+  --sans:"Switzer",system-ui,sans-serif;
+  --mono:"Space Mono",ui-monospace,monospace;
+  --radius:14px;--radius-lg:22px;--radius-pill:999px;
+  --motion:320ms cubic-bezier(.2,0,0,1);
+  --spring:cubic-bezier(.34,1.26,.5,1);
+  --emph:cubic-bezier(.05,.7,.1,1);
+  --page-max:1100px;
+}
+:root,html[data-theme="clay"]{
+  color-scheme:light;
+  --bg:#F5E9E1;              /* blush clay              */
+  --surface:#FDF6F1;
+  --inset:#EEDFD5;
+  --line:rgba(46,27,29,.13);
+  --line-soft:rgba(46,27,29,.08);
+  --ink:#2E1B1D;             /* 13.7:1                  */
+  --soft:#63494E;            /* 7.6:1 on card           */
+  --mute:#7C6266;
+  --accent:#8E2F3C;          /* oxblood                 */
+  --accent-press:#75242F;
+  --accent-soft:rgba(142,47,60,.09);
+  --on-accent:#FBF3F0;       /* 7.3:1                   */
+  --low:#356B4C;   --low-bg:rgba(53,107,76,.10);
+  --med:#8A5A12;   --med-bg:rgba(155,102,18,.11);
+  --high:#A02A2A;  --high-bg:rgba(160,42,42,.09);
+  --major:#2F5878; --major-bg:rgba(47,88,120,.10);
+  --shadow:0 1px 2px rgba(46,27,29,.05),0 4px 14px rgba(46,27,29,.07);
+  --shadow-md:0 14px 34px -12px rgba(46,27,29,.2);
+  --focus:0 0 0 2px var(--bg),0 0 0 4px var(--accent);
+}
+html[data-theme="late-hour"]{
+  color-scheme:dark;
+  --bg:#201317;              /* late-hour plum          */
+  --surface:#2B1B20;
+  --inset:#170D10;
+  --line:rgba(242,230,228,.13);
+  --line-soft:rgba(242,230,228,.08);
+  --ink:#F2E6E4;             /* 14.8:1                  */
+  --soft:#C4AEB2;            /* 7.9:1 on card           */
+  --mute:#9C8489;
+  --accent:#E8909C;          /* dusk rose               */
+  --accent-press:#F2A9B3;
+  --accent-soft:rgba(232,144,156,.10);
+  --on-accent:#37131A;       /* 7.0:1                   */
+  --low:#8FCBA5;   --low-bg:rgba(143,203,165,.10);
+  --med:#E3B45C;   --med-bg:rgba(227,180,92,.10);
+  --high:#F08A7B;  --high-bg:rgba(240,138,123,.10);
+  --major:#9FC2DE; --major-bg:rgba(159,194,222,.10);
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+  --shadow-md:0 14px 34px rgba(0,0,0,.5);
+  --focus:0 0 0 2px var(--bg),0 0 0 4px var(--accent);
+}
+
