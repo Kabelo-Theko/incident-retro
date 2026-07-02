@@ -1,0 +1,76 @@
+/* ════════════════════════════════════════════════════════════════════
+   INCIDENT-RETRO v3 · "THE LEARNING BOARD" DESIGN SYSTEM — TOKENS
+   Project: incident-retro · github.com/Kabelo-Theko/incident-retro
+   Persona: what broke, why, what changes — graphite board, bone ink,
+   one signal-lime marker for the lesson. Blameless by design.
+   (v2's clay/oxblood register retired after review.)
+   Themes on html[data-theme]: board (graphite, default) · daylight.
+   Type: Cabinet Grotesk (display, Fontshare) · Supreme (text, Fontshare)
+   · Space Mono (times, receipts). Measured pairs: accessibility.md.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   INCIDENT-RETRO v3 · "THE LEARNING BOARD" — what broke, why, and
+   what changes. Graphite board, bone ink, one signal-lime marker
+   for the lesson. The app owns every number; people own the learning.
+   Themes: board (graphite, default) · daylight (paper)
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  --head:"Cabinet Grotesk","Supreme",sans-serif;
+  --sans:"Supreme",system-ui,sans-serif;
+  --mono:"Space Mono",ui-monospace,monospace;
+  --radius:12px;--radius-lg:18px;--radius-pill:999px;
+  --motion:280ms cubic-bezier(.2,0,0,1);
+  --spring:cubic-bezier(.34,1.26,.5,1);
+  --emph:cubic-bezier(.05,.7,.1,1);
+  --page-max:1120px;
+}
+:root,html[data-theme="board"]{
+  color-scheme:dark;
+  --bg:#161614;               /* graphite board          */
+  --surface:#21201C;
+  --inset:#0F0F0D;
+  --raised:#2A2925;
+  --line:rgba(242,241,236,.12);
+  --line-soft:rgba(242,241,236,.07);
+  --ink:#F2F1EC;              /* 16.0:1                  */
+  --soft:#B9B7AC;             /* 8.1:1 on surface        */
+  --mute:#8F8D82;             /* 5.4:1 on bg             */
+  --accent:#C8F135;           /* signal lime             */
+  --accent-press:#D9FF57;
+  --accent-text:#D6EE63;      /* 12.6:1                  */
+  --accent-soft:rgba(200,241,53,.10);
+  --on-accent:#1A2400;        /* 12.4:1 on lime          */
+  --low:#6FD08F;   --low-bg:rgba(111,208,143,.10);
+  --med:#F0C24B;   --med-bg:rgba(240,194,75,.10);
+  --high:#FF8577;  --high-bg:rgba(255,133,119,.10);
+  --major:#8FB8FF; --major-bg:rgba(143,184,255,.10);
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+  --shadow-md:0 16px 36px rgba(0,0,0,.5);
+  --focus:0 0 0 2px var(--bg),0 0 0 4px var(--accent);
+}
+html[data-theme="daylight"]{
+  color-scheme:light;
+  --bg:#F4F4EF;
+  --surface:#FFFFFF;
+  --inset:#EAEAE2;
+  --raised:#FFFFFF;
+  --line:rgba(29,28,24,.14);
+  --line-soft:rgba(29,28,24,.08);
+  --ink:#1D1C18;              /* 15.5:1                  */
+  --soft:#565550;             /* 7.5:1 on card           */
+  --mute:#6E6D66;
+  --accent:#B7E62B;           /* lime plate              */
+  --accent-press:#A6D51F;
+  --accent-text:#4E6B00;      /* 5.6:1 as text           */
+  --accent-soft:rgba(139,179,0,.12);
+  --on-accent:#1A2400;        /* 11.1:1 on lime          */
+  --low:#20713F;   --low-bg:rgba(32,113,63,.10);
+  --med:#7A5600;   --med-bg:rgba(150,106,0,.12);
+  --high:#A02A2A;  --high-bg:rgba(160,42,42,.09);
+  --major:#2F5878; --major-bg:rgba(47,88,120,.10);
+  --shadow:0 1px 2px rgba(29,28,24,.05),0 4px 14px rgba(29,28,24,.07);
+  --shadow-md:0 16px 36px -12px rgba(29,28,24,.18);
+  --focus:0 0 0 2px var(--bg),0 0 0 4px var(--accent-text);
+}
+
