@@ -84,7 +84,8 @@ a{color:inherit}
 /* ── top dock ── */
 .topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft)}
 .topbar .row{max-width:var(--page-max);margin:0 auto;padding:12px clamp(16px,4vw,32px);display:flex;align-items:center;gap:12px}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--head);font-weight:800;font-size:1.15rem;letter-spacing:-.01em;white-space:nowrap}
+.brand{flex:none;display:flex;align-items:center;gap:10px;font-family:var(--head);font-weight:800;font-size:1.15rem;letter-spacing:-.01em;white-space:nowrap}
+@media (max-width:440px){.brand .btxt{display:none}}
 .brand .dot{width:10px;height:10px;border-radius:3px;background:var(--accent);flex:none}
 .nav{display:flex;gap:4px;margin-left:auto;align-items:center;background:var(--inset);border-radius:var(--radius-pill);padding:4px;overflow-x:auto;scrollbar-width:none;max-width:100%}
 .nav::-webkit-scrollbar{display:none}
@@ -223,7 +224,7 @@ footer a:focus-visible{outline:none;box-shadow:var(--focus)}
 <body>
 <div class="topbar">
   <div class="row">
-    <div class="brand"><span class="dot"></span> incident-retro</div>
+    <div class="brand"><span class="dot"></span><span class="btxt">incident-retro</span></div>
     <button class="hamb" id="hamb" aria-label="Menu" hidden><span></span><span></span><span></span></button>
     <nav class="nav" id="nav">
       <a data-view="build" class="active">Build RCA</a>
