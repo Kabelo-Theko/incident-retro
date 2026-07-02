@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>incident-retro — lose the outage, keep the film</title>
+<meta name="description" content="incident-retro turns every incident into a learning board: a timeline everyone can see, lessons pinned to the exact moment they happened, and actions with owners and due dates — so the same failure doesn't get a third season.">
+<meta property="og:title" content="incident-retro — lose the outage, keep the film">
+<meta property="og:description" content="Blameless retros with scoreboard honesty: lessons pinned to timestamps, actions with owners and due dates.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23161614'/%3E%3Crect x='12' y='14' width='40' height='14' rx='4' fill='%23C8F135'/%3E%3Crect x='12' y='34' width='18' height='14' rx='4' fill='%23C8F135' opacity='.4'/%3E%3Crect x='34' y='34' width='18' height='14' rx='4' fill='%23C8F135' opacity='.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&f[]=supreme@400,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+@layer reset, tokens, base, components, utilities;
+@layer reset {
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;min-width:0}
+  html{-webkit-text-size-adjust:100%}
+  body{line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:clip}
+  img,svg{display:block;max-width:100%}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  :focus:not(:focus-visible){outline:none}
+  :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+  ::selection{background:var(--lime);color:var(--on-lime)}
+  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+}
+@layer tokens {
+  :root{
+    color-scheme:dark;
+    --bg:#161614; --bg-2:#101010; --card:#1E1E1B; --card-2:#242420;
+    --ink:#EEEDE6; --soft:#B8B7AC; --mute:#8E8D81;
+    --line:#2C2C28; --line-strong:#3B3B35;
+    --lime:#C8F135; --lime-text:#C8F135; --on-lime:#161614; --lime-tint:#C8F13519;
+    --ok:#57C48A; --ok-tint:#57C48A1F;
+    --warn:#E0A54A; --warn-tint:#E0A54A1F;
+    --focus:#C8F135;
+    --sh-1:0 1px 2px #0007;
+    --sh-2:0 12px 34px #0009;
+    --r-sm:6px; --r-md:10px; --r-lg:16px;
+    --e-micro:cubic-bezier(.2,0,0,1); --e-ui:cubic-bezier(.32,.72,0,1);
+    --e-large:cubic-bezier(.05,.7,.1,1);
+    --max:1140px;
+  }
+}
+@layer base {
+  body{background:var(--bg);color:var(--ink);font-family:"Supreme","Figtree",system-ui,sans-serif}
+  h1,h2,h3{font-family:"Cabinet Grotesk","Supreme",sans-serif;font-weight:800;line-height:.98;
+    letter-spacing:-.015em;text-wrap:balance;text-transform:uppercase}
+  p{text-wrap:pretty}
+  .mono{font-family:"Space Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+  .wrap{max-width:var(--max);margin-inline:auto;padding-inline:clamp(20px,6vw,64px)}
+  section{padding-block:clamp(56px,9vw,116px)}
+  .kicker{font-family:"Space Mono",monospace;font-size:.72rem;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--lime-text);font-weight:700}
+}
+@layer components {
+  .skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--lime);
+    color:var(--on-lime);padding:12px 16px;border-radius:0 0 8px 0;font-weight:700}
+  .skip:focus{left:0}
+  /* nav — the dock */
+  .nav{position:sticky;top:0;z-index:50;background:color-mix(in oklab,var(--bg) 90%,transparent);
+    backdrop-filter:blur(10px);border-bottom:2px solid var(--lime)}
+  .nav .row{display:flex;align-items:center;gap:16px;height:64px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:"Cabinet Grotesk",sans-serif;
+    font-weight:800;font-size:1.18rem;text-transform:uppercase;letter-spacing:.02em;flex:none}
+  .bmark{width:26px;height:26px;border-radius:6px;background:var(--lime);flex:none;
+    display:grid;place-items:center;font-family:"Space Mono",monospace;font-weight:700;
+    font-size:.7rem;color:var(--on-lime)}
+  .nav .links{display:flex;gap:2px;margin-left:auto}
+  .nav .links a{font-family:"Space Mono",monospace;font-size:.74rem;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--soft);padding:8px 16px;border-radius:var(--r-sm);
+    transition:all .15s var(--e-micro)}
+  .nav .links a:hover{color:var(--on-lime);background:var(--lime)}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.92rem;
+    padding:12px 24px;border-radius:var(--r-sm);transition:transform .13s var(--e-micro),box-shadow .2s var(--e-ui)}
+  .btn-primary{background:var(--lime);color:var(--on-lime);box-shadow:var(--sh-1)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 26px #c8f1352b,var(--sh-1)}
+  .btn-primary:active{transform:scale(.98)}
+  .btn-ghost{border:1.5px solid var(--line-strong);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--soft);transform:translateY(-1px)}
+  .btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.4;fill:none;transition:transform .15s var(--e-micro)}
+  .btn:hover svg{transform:translateX(3px)}
+  /* hero — scoreboard first */
+  .hero{padding-top:clamp(44px,6vw,84px);padding-bottom:clamp(48px,8vw,100px)}
+  .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,64px);align-items:center}
+  .hero h1{font-size:clamp(2.9rem,7.4vw,5.8rem);color:#FBFBF4}
+  .hero h1 em{font-style:normal;color:var(--lime)}
+  .lede{font-size:clamp(1.04rem,1.6vw,1.2rem);color:var(--soft);max-width:46ch;margin-top:20px}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  .chip{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:500;
+    color:var(--soft);background:var(--card);border:1px solid var(--line);
+    padding:8px 16px;border-radius:999px}
+  .chip svg{width:14px;height:14px;stroke:var(--ok);stroke-width:2.4;fill:none;flex:none;
+    stroke-linecap:round;stroke-linejoin:round}
+  /* scoreboard */
+  .board{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);
+    padding:20px;position:relative}
+  .tile.hot{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
+  .tile .lbl{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--mute)}
+  .tile.hot .lbl{color:#3D4413}
+  .tile .val{font-family:"Cabinet Grotesk",sans-serif;font-weight:800;
+    font-size:clamp(2.2rem,5vw,3.4rem);line-height:.95;margin-top:8px;color:#FBFBF4;
+    font-variant-numeric:tabular-nums}
+  .tile.hot .val{color:var(--on-lime)}
+  .tile .sub{font-size:.78rem;color:var(--mute);margin-top:6px}
+  .tile.hot .sub{color:#3D4413;font-weight:500}
+  .board-note{grid-column:1/-1;font-family:"Space Mono",monospace;font-size:.7rem;
+    color:var(--mute);padding:4px 6px 0}
+  /* sections */
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+    flex-wrap:wrap;margin-bottom:clamp(28px,4vw,48px)}
+  .sec-head h2{font-size:clamp(2rem,4.4vw,3.4rem);color:#FBFBF4}
+  .qtr{font-family:"Space Mono",monospace;font-size:.72rem;color:var(--on-lime);
+    letter-spacing:.14em;display:inline-block;background:var(--lime);
+    padding:4px 12px;border-radius:4px;margin-bottom:16px;font-weight:700}
+  .sec-head p{color:var(--soft);max-width:42ch}
+  /* tension */
+  .tension{background:var(--bg-2);border-block:1px solid var(--line)}
+  .tension .big{font-family:"Cabinet Grotesk",sans-serif;font-weight:800;text-transform:uppercase;
+    font-size:clamp(1.9rem,4.6vw,3.4rem);line-height:1;max-width:20ch;color:#FBFBF4}
+  .tension .big u{text-decoration:none;color:var(--lime)}
+  .tension .sub{color:var(--soft);max-width:54ch;margin-top:16px}
+  .repeat{margin-top:32px;display:grid;gap:8px;max-width:560px}
+  .rp{display:flex;align-items:baseline;gap:16px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r-sm);padding:12px 16px;font-family:"Space Mono",monospace;font-size:.8rem}
+  .rp .d{color:var(--mute);flex:none}
+  .rp .t{color:var(--ink)}
+  .rp .n{margin-left:auto;color:var(--warn);flex:none;font-weight:700}
+  .rp:last-child .n{color:var(--lime)}
+  /* timeline + lessons */
+  .prov-grid{display:grid;grid-template-columns:1.06fr .94fr;gap:clamp(28px,4vw,52px);align-items:start}
+  .tl{list-style:none;border-left:2px solid var(--line-strong);margin-left:8px;display:grid}
+  .tl li{position:relative;padding:0 0 24px 24px}
+  .tl li:last-child{padding-bottom:0}
+  .tl li::before{content:"";position:absolute;left:-7px;top:5px;width:12px;height:12px;
+    border-radius:50%;background:var(--bg);border:2px solid var(--line-strong)}
+  .tl li.pin::before{border-color:var(--lime);background:var(--lime)}
+  .tl .ts{font-family:"Space Mono",monospace;font-size:.72rem;color:var(--mute)}
+  .tl .ev{font-size:.94rem;color:var(--ink);margin-top:2px}
+  .lesson{margin-top:8px;background:var(--lime-tint);border:1px solid color-mix(in oklab,var(--lime) 34%,transparent);
+    border-radius:var(--r-sm);padding:12px 16px;font-size:.86rem;color:var(--ink)}
+  .lesson .lt{font-family:"Space Mono",monospace;font-size:.64rem;letter-spacing:.14em;
+    color:var(--lime-text);display:block;margin-bottom:4px;font-weight:700}
+  .aside h3{font-family:"Cabinet Grotesk",sans-serif;font-size:1.5rem;margin-bottom:12px;
+    color:#FBFBF4;text-transform:uppercase}
+  .aside p{color:var(--soft);font-size:.98rem;max-width:44ch}
+  .aside p+p{margin-top:12px}
+  /* actions */
+  .acts{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+  .acts .ah{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:16px 20px;
+    border-bottom:1px solid var(--line);font-family:"Space Mono",monospace;font-size:.72rem;color:var(--mute)}
+  .act{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+    padding:12px 20px;border-bottom:1px solid var(--line)}
+  .act:last-child{border-bottom:none}
+  .act .st{font-family:"Space Mono",monospace;font-size:.64rem;font-weight:700;letter-spacing:.08em;
+    padding:4px 8px;border-radius:4px;white-space:nowrap}
+  .act .st.done{background:var(--ok-tint);color:var(--ok)}
+  .act .st.due{background:var(--warn-tint);color:var(--warn)}
+  .act .t{font-size:.9rem;color:var(--ink)}
+  .act .o{font-family:"Space Mono",monospace;font-size:.72rem;color:var(--mute);white-space:nowrap}
+  /* vitals */
+  .vitals{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+  .vital{background:var(--card);padding:24px 24px}
+  .vital .n{font-family:"Cabinet Grotesk",sans-serif;font-weight:800;text-transform:uppercase;
+    font-size:clamp(1.9rem,4vw,2.9rem);line-height:.95;color:#FBFBF4}
+  .vital .n em{font-style:normal;color:var(--lime)}
+  .vital .c{font-size:.88rem;color:var(--soft);margin-top:12px}
+  .quiet{margin-top:24px;display:flex;align-items:center;gap:16px;background:var(--ok-tint);
+    border:1px solid color-mix(in oklab,var(--ok) 36%,transparent);border-radius:var(--r-md);padding:20px 24px}
+  .quiet svg{width:22px;height:22px;stroke:var(--ok);stroke-width:2.4;fill:none;flex:none;
+    stroke-linecap:round;stroke-linejoin:round}
+  .quiet b{color:var(--ink)} .quiet span{color:var(--soft);font-size:.94rem}
+  /* CTA */
+  .band{background:var(--lime);color:var(--on-lime);border-radius:var(--r-lg);text-align:center;
+    padding:clamp(40px,6vw,72px) clamp(28px,5vw,64px);position:relative;overflow:hidden}
+  .band h2{font-size:clamp(2.1rem,4.8vw,3.8rem);color:var(--on-lime)}
+  .band p{color:#3D4413;max-width:46ch;margin:16px auto 0;font-weight:500}
+  .band .cta-row{justify-content:center}
+  .band .btn-primary{background:var(--on-lime);color:var(--lime)}
+  .band .btn-ghost{border-color:#3D4413;color:var(--on-lime)}
+  .band .btn-ghost:hover{background:var(--on-lime);color:var(--lime);border-color:var(--on-lime)}
+  footer{border-top:1px solid var(--line);padding-block:36px;color:var(--mute);font-size:.86rem}
+  footer .row{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center}
+  footer a{color:var(--soft)} footer a:hover{color:var(--ink)}
+  footer .sp{margin-left:auto}
+  .suite{border-top:1px dashed var(--line-strong);margin-top:24px;padding-top:16px;
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px}
+  .suite .sl{font-family:"Space Mono",monospace;font-size:.68rem;letter-spacing:.18em;
+    color:var(--mute);text-transform:uppercase;flex:none}
+  .suite a{font-family:"Space Mono",monospace;font-size:.74rem;color:var(--soft);
+    border-bottom:1px solid var(--line-strong)}
+  .suite a:hover{color:var(--lime-text);border-color:var(--lime-text)}
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s var(--e-large),transform .6s var(--e-large)}
+  .reveal.in{opacity:1;transform:none}
+}
+@layer utilities {
+  @media (max-width:940px){
+    .hero-grid,.prov-grid{grid-template-columns:1fr}
+    .hero-visual{order:-1;max-width:560px}
+    .vitals{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:560px){
+    input,select,textarea{font-size:16px}
+    .nav .links{display:none}
+    .act{grid-template-columns:auto 1fr}
+    .act .o{grid-column:2;justify-self:start}
+  }
+  @media (max-width:400px){ .brand .bt{display:none} }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+      transition-duration:.01ms!important}
+    .reveal{opacity:1;transform:none}
+  }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap row">
+    <a class="brand" href="#top" aria-label="incident-retro home">
+      <span class="bmark" aria-hidden="true">IR</span><span class="bt">Learning&nbsp;Board</span>
+    </a>
+    <nav class="links" aria-label="Primary">
+      <a href="#film">The film</a>
+      <a href="#actions">Actions</a>
+      <a href="#promise">The promise</a>
+    </nav>
+    <a class="btn btn-primary" href="#start" style="margin-left:12px">Run the retro</a>
+  </div>
+</header>
+
+<main id="top">
+
+<section class="hero" aria-labelledby="h1">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="kicker">Blameless retros · scoreboard honesty</span>
+      <h1 id="h1" style="margin-top:16px">Lose the outage. <em>Keep the film.</em></h1>
+      <p class="lede">incident-retro turns every incident into a learning board: a timeline everyone can see, lessons pinned to the exact moment they happened, and actions with owners and due dates — so the same Redis timeout doesn't get a third season.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#start">Run the retro
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn-ghost" href="#film">See a learning board</a>
+      </div>
+      <div class="chips" aria-label="What incident-retro guarantees">
+        <span class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16.5 9.5"/></svg>Every action has an owner and a date</span>
+        <span class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16.5 9.5"/></svg>Lessons pinned to timestamps</span>
+        <span class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16.5 9.5"/></svg>Repeats counted, publicly</span>
+      </div>
+    </div>
+
+    <div class="hero-visual reveal" role="img" aria-label="A retro scoreboard: detected in 4 minutes, resolved in 38, all five actions owned, and the repeat counter driven to zero">
+      <div class="board">
+        <div class="tile"><span class="lbl">Detected in</span><div class="val mono"><span data-count="4">0</span>m</div><div class="sub">alert → human eyes</div></div>
+        <div class="tile"><span class="lbl">Resolved in</span><div class="val mono"><span data-count="38">0</span>m</div><div class="sub">eyes → all clear</div></div>
+        <div class="tile"><span class="lbl">Actions owned</span><div class="val mono"><span data-count="5">0</span>/5</div><div class="sub">named owner + due date</div></div>
+        <div class="tile hot"><span class="lbl">Repeat counter</span><div class="val mono">2→<span data-count="0">0</span></div><div class="sub">this failure retires here</div></div>
+        <div class="board-note">INC-0147 · payments queue backlog · retro closed Jul 1 · film archived</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tension" aria-labelledby="tz">
+  <div class="wrap" style="padding-block:clamp(56px,8vw,104px)">
+    <span class="kicker">Third quarter, same play</span>
+    <p class="big" id="tz" style="margin-top:16px">Same Redis timeout. <u>Third quarter in a row.</u></p>
+    <p class="sub">The March retro found the fix. It lives in a doc called <span class="mono" style="font-size:.85em">retros_final_v2</span> in a drive nobody opens during an incident. A lesson that isn't findable, owned and dated isn't a lesson — it's a diary entry.</p>
+    <div class="repeat" role="img" aria-label="The same Redis timeout incident recurring in January, March and June, until the June retro retires it">
+      <div class="rp"><span class="d">Jan 14</span><span class="t">Redis connection-pool timeout</span><span class="n">Nº 1</span></div>
+      <div class="rp"><span class="d">Mar 22</span><span class="t">Redis connection-pool timeout</span><span class="n">Nº 2</span></div>
+      <div class="rp"><span class="d">Jun 30</span><span class="t">Redis connection-pool timeout — retro closed, action shipped</span><span class="n">retired</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="film" aria-labelledby="hw">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <span class="qtr">Q1 · THE FILM</span>
+        <h2 id="hw">Lessons live on the timeline, not in a doc.</h2>
+      </div>
+      <p>The board replays the incident minute by minute. When the room spots a lesson, it gets pinned to the exact moment it happened — so "we should have caught this at 14:09" stays attached to 14:09 forever.</p>
+    </div>
+    <div class="prov-grid">
+      <div class="reveal">
+        <ol class="tl">
+          <li><span class="ts mono">14:02</span><div class="ev">Deploy 508 ships a config change to the queue workers</div></li>
+          <li class="pin"><span class="ts mono">14:09</span><div class="ev">First alert fires — but only in the muted #infra-noise channel</div>
+            <div class="lesson"><span class="lt">LESSON · PINNED 14:09</span>Queue-depth alerts route to a muted channel. Move them to #on-call with paging. → became Action 2</div></li>
+          <li><span class="ts mono">14:31</span><div class="ev">Rollback of 508 · queue drains, checkout recovers</div></li>
+          <li class="pin"><span class="ts mono">14:40</span><div class="ev">All clear — total customer impact 38 minutes</div>
+            <div class="lesson"><span class="lt">LESSON · PINNED 14:40</span>Rollback was 4 minutes once decided; the delay was deciding. Pre-authorize rollback for queue regressions. → became Action 4</div></li>
+        </ol>
+      </div>
+      <div class="aside reveal">
+        <h3>Blameless, not toothless.</h3>
+        <p>The film describes <b>systems and moments</b>, not culprits: "the alert routed to a muted channel", never "Sipho missed the alert". Blame changes what people are willing to say in the room, and the board is only as good as what gets said.</p>
+        <p>The AI drafts the narrative from the timeline — every sentence linked back to a timestamp — and the facilitator signs it before it becomes the record. Nothing enters the archive unsigned.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="actions" style="background:var(--bg-2)" aria-labelledby="pv">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <span class="qtr">Q2 · THE ACTIONS</span>
+        <h2 id="pv">A lesson without an owner is a wish.</h2>
+      </div>
+      <p>Every pinned lesson must convert into an action with a named owner and a due date — or be explicitly declined, with the reason on the board. The repeat counter keeps everyone honest about which is which.</p>
+    </div>
+    <div class="acts reveal" role="img" aria-label="The action list from the retro: five actions, each with a status, an owner and a due date">
+      <div class="ah"><span>INC-0147 · actions</span><span>5 of 5 owned · 0 orphaned</span></div>
+      <div class="act"><span class="st done">SHIPPED</span><span class="t">Re-route queue-depth alerts to #on-call with paging</span><span class="o">Lerato · Jul 03</span></div>
+      <div class="act"><span class="st done">SHIPPED</span><span class="t">Pre-authorized rollback for queue-config regressions</span><span class="o">Anele · Jul 05</span></div>
+      <div class="act"><span class="st due">DUE JUL 11</span><span class="t">Connection-pool limits sized from June load test</span><span class="o">Thabo · Jul 11</span></div>
+      <div class="act"><span class="st due">DUE JUL 15</span><span class="t">Add queue-depth to the deploy canary checklist</span><span class="o">Fatima · Jul 15</span></div>
+      <div class="act"><span class="st done">DECLINED</span><span class="t">"Rewrite the queue in Rust" — declined: cost ≫ risk retired by actions 1–4, reasoning on the board</span><span class="o">room · Jul 01</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="promise" aria-labelledby="vs">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="qtr">Q3 · THE PROMISE</span><h2 id="vs">What the board guarantees.</h2></div>
+      <p>Mechanics enforced on every retro — the scoreboard doesn't do aspirations.</p>
+    </div>
+    <div class="vitals reveal">
+      <div class="vital"><div class="n">Owned</div><div class="c">every action carries a name and a due date</div></div>
+      <div class="vital"><div class="n">Pinned</div><div class="c">every lesson attaches to its timestamp</div></div>
+      <div class="vital"><div class="n">Counted</div><div class="c">repeat incidents tracked on a public counter</div></div>
+      <div class="vital"><div class="n"><em>Signed</em></div><div class="c">the narrative is human-approved before archive</div></div>
+    </div>
+    <div class="quiet reveal" role="status">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16.5 9.5"/></svg>
+      <div><b>No open retros — 3 actions still in flight, all on schedule.</b> <span>Repeat counter across the quarter: 2 retired, 0 new repeats.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="start" aria-labelledby="ct">
+  <div class="wrap">
+    <div class="band reveal">
+      <h2 id="ct">Run the retro like film review.</h2>
+      <p>Import the incident channel, build the timeline together, pin the lessons where they happened — and leave with actions somebody actually owns.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/Kabelo-Theko/incident-retro" target="_blank" rel="noopener noreferrer">Run the retro
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn-ghost" href="#film">Rewatch the film</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <a class="brand" href="#top" aria-label="incident-retro"><span class="bmark" aria-hidden="true">IR</span><span class="bt">Learning&nbsp;Board</span></a>
+      <a href="#film">The film</a>
+      <a href="#actions">Actions</a>
+      <a href="https://github.com/Kabelo-Theko/incident-retro" target="_blank" rel="noopener noreferrer">Source</a>
+      <span class="sp mono" style="font-size:.72rem">Board state in-browser · AI drafts under review</span>
+    </div>
+    <div class="suite">
+      <span class="sl">Truth Guard suite</span>
+      <a href="https://github.com/Kabelo-Theko/ticket-triage" target="_blank" rel="noopener noreferrer">Dispatch</a>
+      <a href="https://github.com/Kabelo-Theko/onboard-kit" target="_blank" rel="noopener noreferrer">Welcome Kit</a>
+      <a href="https://github.com/Kabelo-Theko/slo-watch" target="_blank" rel="noopener noreferrer">Vanilla Ledger</a>
+      <a href="https://github.com/Kabelo-Theko/net-doctor" target="_blank" rel="noopener noreferrer">Field Guide</a>
+      <a href="https://github.com/Kabelo-Theko/requirements-forge" target="_blank" rel="noopener noreferrer">Story Studio</a>
+      <a href="https://github.com/Kabelo-Theko/resolve-notes-" target="_blank" rel="noopener noreferrer">Print Shop</a>
+      <a href="https://github.com/Kabelo-Theko/kabelo-theko-projects-portfolio" target="_blank" rel="noopener noreferrer">Portfolio</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var rm=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function fire(el){
+    el.classList.add("in");
+    el.querySelectorAll("[data-count]").forEach(function(n){
+      var end=parseInt(n.getAttribute("data-count"),10);
+      if(rm){n.textContent=end;return;}
+      var t0=null;
+      function step(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/800);
+        n.textContent=Math.round(p*end);
+        if(p<1)requestAnimationFrame(step);}
+      requestAnimationFrame(step);
+    });
+  }
+  var els=[].slice.call(document.querySelectorAll(".reveal"));
+  if(rm||!("IntersectionObserver"in window)){els.forEach(fire);return;}
+  var io=new IntersectionObserver(function(ents){
+    ents.forEach(function(e){if(e.isIntersecting){fire(e.target);io.unobserve(e.target);}});
+  },{threshold:.12,rootMargin:"-6% 0px"});
+  els.forEach(function(el){io.observe(el);});
+})();
+</script>
+</body>
+</html>
