@@ -1,23 +1,24 @@
 /**
- * incident-retro "The Debrief" — Tailwind consumption of tokens.css
+ * incident-retro "The Learning Board" — Tailwind consumption of tokens.css
  * Tokens are CSS custom properties (theme via html[data-theme]).
  */
 module.exports = {
   content: ["./docs/**/*.html", "./src/**/*.{js,jsx,ts,tsx,vue}"],
-  darkMode: ["selector", '[data-theme="late-hour"]'],
+  darkMode: ["selector", '[data-theme="board"]'],
   theme: {
     fontFamily: {
-      display: ["Instrument Serif", "Georgia", "serif"],
-      sans: ["Switzer", "system-ui", "sans-serif"],
+      display: ["Cabinet Grotesk", "Supreme", "sans-serif"],
+      sans: ["Supreme", "system-ui", "sans-serif"],
       mono: ["Space Mono", "ui-monospace", "monospace"],
     },
     extend: {
       colors: {
-        clay: { DEFAULT: "var(--bg)", card: "var(--surface)", inset: "var(--inset)" },
+        board: { DEFAULT: "var(--bg)", card: "var(--surface)", inset: "var(--inset)", raised: "var(--raised)" },
         ink: { DEFAULT: "var(--ink)", soft: "var(--soft)", mute: "var(--mute)" },
-        oxblood: {
+        lime: {
           DEFAULT: "var(--accent)",
           press: "var(--accent-press)",
+          text: "var(--accent-text)",
           soft: "var(--accent-soft)",
           on: "var(--on-accent)",
         },

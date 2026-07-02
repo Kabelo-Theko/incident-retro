@@ -1,55 +1,52 @@
-# incident-retro — "The Debrief" design system
+# incident-retro — "The Learning Board" design system (v3)
 
-**Project:** [incident-retro](https://github.com/Kabelo-Theko/incident-retro) · **Complete UI/UX overhaul, July 2026** (built at the recalibrated 2026 bar)
+**Project:** [incident-retro](https://github.com/Kabelo-Theko/incident-retro) · **v3, July 2026**
+*(v2's blush-clay/oxblood register was retired after review — it read muted
+and washed. v3 goes the other way: high contrast, confident, modern.)*
 
 ## The concept
 
-A blameless review happens in **the calm hour after the fire** — and the design
-is that hour: blush-clay warmth, oxblood ink, an elegant Instrument Serif that
-gives the document the gravity of something worth keeping. Numbers stay
-sacred: the blast radius is *computed*, marked with its own italic truth line,
-and the AI (when invited) only drafts wording that a person reviews.
+A good post-incident review ends on **the lesson** — so the design is a
+learning board: graphite surface, bone ink, and one **signal-lime marker**
+that highlights exactly what matters (the eyebrow dash, the lesson word in
+the headline, timeline times, Quick-win actions, the primary button). The
+blast radius reads as a **scoreboard** — big Cabinet Grotesk numerals on
+inset tiles, the breach tile ringed red — with a lime-ruled
+*computed-not-generated* line beneath. A clean **daylight** paper theme ships
+for bright rooms.
 
 ### Design DNA
 
 | | |
 |---|---|
-| **Essence** | A debrief room, not an alarm room. Reflection with rigour. |
-| **One-liner** | "A mediation-trained senior engineer hired to run the post-mortem." |
-| **Canvas** | Blush clay `#F5E9E1` (default) · late-hour plum `#201317` |
-| **Accent** | Oxblood `#8E2F3C` / dusk rose `#E8909C` by night — eyebrow, times, primary actions. Severity and priority are 10%-alpha tinted pills (P1 red / P2 amber / P3 green; Quick win green / Major blue / Planned amber / Reconsider red). |
-| **Type cast** | Instrument Serif 400 + italic (display, doc titles, the big blast numerals) · Switzer (text, Fontshare) · Space Mono (timestamps, receipts, section labels, chips) |
-| **Shape** | 12–22px radii, pill chips and segmented nav — soft, deliberate |
-| **Signature** | The segmented-track nav with a floating active pill; serif blast-radius numerals at 2rem on clay tiles; mono timeline times in oxblood; the italic "computed, not generated" truth line |
-| **Rejection list** | No alarm styling (this is *after* the incident), no cold blue-gray (v1 retired), no Inter/Archivo, no hard corners, no left-border cards |
+| **Essence** | The board where the team writes down the lesson. High contrast, zero blame. |
+| **One-liner** | "A sports analyst's board hired for blameless engineering reviews." |
+| **Canvas** | Graphite `#161614` (board, default) · paper `#F4F4EF` (daylight) |
+| **Accent** | Signal lime `#C8F135` (13.9:1 on graphite; dark ink on lime 12.4:1) — the lesson marker. Quick-win priority chips go solid lime; P1/P2/P3 and Major/Planned/Reconsider stay tinted chips with inset rules. |
+| **Type cast** | Cabinet Grotesk 700/800 (display + scoreboard numerals, Fontshare) · Supreme (text, Fontshare) · Space Mono (times, receipts) |
+| **Shape** | 12–18px radii, pill dock nav (lime-filled active), squared metric tiles |
+| **Signature** | The scoreboard blast tiles with ringed breach/margin; lime timeline times; the lime-ruled truth line; "What broke. Why. *What changes.*" |
+| **Rejection list** | No muted/dusty palettes (v2's failure), no serif (this board is grotesk), no left-border cards, no loops |
 
 ## Functional parity (zero loss — engine untouched)
+Timeline parser + gap chips, computed blast radius + SLA breach/margin,
+editable 5-Whys/factors/remediations with live priority chips, exec summary
+(template or AI draft + receipt + no-key fallback), Markdown export
+(quick wins first), print contract, localStorage library, URL prefill, the
+Sandton worked example.
 
-The engine ships byte-identical: timeline parser with gap detection, computed
-blast radius + SLA breach/margin, 5-Whys editable chain, factor buckets,
-effort×impact priority chips (live re-ranked), executive summary
-(template or AI draft with reasoning receipt + no-key fallback), Markdown
-copy/download ordered quick-wins-first, print contract, localStorage library
-(open/copy/delete), URL-param prefill, the worked Sandton example.
-
-New: clay/late-hour themes (persisted), segmented pill nav + theme toggle,
-Instrument Serif document voice, spring hovers, 90% 4px grid, audit
-0 fails / 0 warnings.
-
-## Files
-`tokens.css` · `tailwind.config.js` · `components.md` · `accessibility.md` ·
-`motion.md` · `grid.md` (icon-light by design: moon/sun toggle only; mono
-labels carry the wayfinding).
+## Mobile hardening (v3)
+16px form fonts ≤560px (no iOS focus zoom) · `min-width:0` on all grid/flex
+children · `overflow-x:clip` on body · `overflow-wrap:anywhere` on titles,
+receipts, gap chips · metrics 4→2-up ≤600px · grid2 stacks ≤380px · priority
+chips drop to full-width rows ≤480px · dock nav scrolls, never wraps over
+content. Audit: **0 fails, 0 warnings, 94% 4px grid.**
 
 ## Reaching every state
 | State | How |
 |---|---|
-| Empty debrief | Load the app |
-| Worked example | "See an example" — Sandton POS P1 with breach tile |
-| Deterministic skeleton | Fill the form → Build RCA |
-| AI draft + receipt / fallback | Draft with AI (offline shows the no-key note under the doc) |
-| Breach vs margin tiles | Set downtime above/below the SLA target |
-| Timeline gaps | Leave ≥15 min between timestamped lines |
-| Priority chips live | Change effort/impact selects — chips re-label instantly |
-| Library / empty | Save to library → Library tab; delete all for empty state |
-| Late-hour theme | Moon toggle; persists |
+| Empty board / worked example | Load → "See an example" (Sandton P1, breach tile ringed) |
+| Deterministic skeleton / AI draft / fallback | Build RCA · Draft with AI (offline → note) |
+| Breach vs margin tiles | Downtime above/below the SLA target |
+| Gap chips · live priority chips · library | as v2 |
+| Daylight theme | Sun/moon toggle; persists |

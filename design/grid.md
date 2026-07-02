@@ -1,18 +1,21 @@
-# Responsive grid & layout — incident-retro "The Debrief"
+# Responsive grid & layout — incident-retro "The Learning Board"
 
 ## Breakpoints
 | Width | Changes |
 |---|---|
-| ≤ 560px | Blast metrics 4→2-up; factor buckets stack |
+| ≤ 380px | grid2 field pairs stack |
+| ≤ 480px | priority chips become full-width rows |
+| ≤ 560px | form fonts go 16px (iOS zoom guard) |
+| ≤ 600px | Blast metrics 4→2-up; factor buckets stack |
 | ≤ 920px | Desk collapses; form panel un-sticks above the document |
-| 1100px | `--page-max` |
+| 1120px | `--page-max` |
 
 Checked at 360 / 768 / 1280.
 
 ## Structure
 ```
 topbar: ● incident-retro · [Build RCA | Library | Reference] · ◐
-mast: eyebrow → serif H1 (italic emphasis) → lede
+mast: lime-dash eyebrow → Cabinet 800 H1 (lime lesson) → lede
 desk: [form panel 360px sticky | document 1fr]
   document: label → serif title → sev pill + stamp
     → blast tiles (4 → 2) + truth line
